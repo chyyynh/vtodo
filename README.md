@@ -8,7 +8,6 @@ VTodo is designed to work seamlessly with AI coding assistants like Claude Code,
 
 - 🎯 **Visual Kanban Board** - Drag and drop todo between Pending, In Progress, and Completed
 - 💾 **JSON Storage** - Fast, reliable storage with .vtodo/todos.json
-- 📝 **Optional Markdown Details** - Add detailed markdown files for complex todos
 - 🖥️ **Dual Interface** - CLI commands + Web UI
 - ✅ **Todo Management** - Create, edit, delete todos with tags and time estimates
 - 📊 **Progress Tracking** - Checklists with visual progress bars
@@ -22,23 +21,14 @@ VTodo is designed to work seamlessly with AI coding assistants like Claude Code,
 # Run from anywhere
 cd ~/my-project
 pnpm add vtodo
+npx vtodo init
 ```
 
-### Using npx (Recommended)
+### Setup for for Claude Code, Codex, Cursor or other AI Editors
 
-```bash
-# Navigate to your project directory
-cd ~/my-project
+Add this to your `claude.md` or `agent.md`(edit whatever you like cause I'm not a prompt master):
 
-# Initialize vtodo (creates .vtodo/todos.json)
-npx vtodo init
-
-# Setup for Claude Code, Codex, Cursor or other AI Editors
-
-Add this to your `claude.md` or `agent.md`:
-
----
-
+```markdown
 # Project Todo Management
 
 This project uses VTodo for todo management.
@@ -47,19 +37,23 @@ This project uses VTodo for todo management.
 - Use `vtodo add "title" --detail` to create todos with detail files
 - All todos are stored in `.vtodo/todos.json`
 - Detail files go in `todo/XXX-todo.md`
-- When implementing features, update todo status with `vtodo status <id> in-progress`
+- Update todo status with `vtodo status <id> <status>`
 - Mark complete with `vtodo done <id>`
 
-## Instructions for AI Assistant
-1. When starting a new feature, create a todo with details:
-   - Run `vtodo add "Feature title" --detail --tags <tags>`
-   - Edit the detail file in `todo/` to add implementation notes, technical decisions, and step-by-step plan
-2. Update todo status as you work (`pending` → `in-progress` → `completed`)
-3. Use checklists in detail files for breaking down complex tasks
-4. Always check `vtodo list` before starting work to see current priorities
+## Workflow for AI Assistant
+### Creating Todos
+When starting a new feature or task, run the command:
 
----
+vtodo add "Feature title" --detail --tags <tags> --expected <time>
 
+Then write the detailed file in the /todo folder you just created
+
+Always run `vtodo list` to check current priorities and status
+```
+
+### Using
+
+```bash
 # Add a todo
 Use your agent editor to follow instruction to add todo or 
 `npx vtodo add "Implement user login" --tags backend --expected 2h`

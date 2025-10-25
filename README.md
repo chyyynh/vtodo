@@ -25,8 +25,9 @@ VTodo is designed to work seamlessly with AI coding assistants like Claude Code,
 npm install vtodo
 # or: pnpm add vtodo
 
-# Step 2: Install the plugin from GitHub
-/plugin install chyyynh/vtodo
+# Step 2: Add marketplace and install plugin
+/plugin marketplace add chyyynh/vtodo
+/plugin install vtodo
 
 # Step 3: Initialize in your project
 /vtodo-init

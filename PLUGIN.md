@@ -20,12 +20,22 @@ pnpm add vtodo
 
 ### Step 2: Install Claude Code Plugin
 
+#### Option A: From Marketplace (Recommended)
+
 ```bash
-# Install directly from GitHub
-/plugin install chyyynh/vtodo
+# Add the VTodo marketplace
+/plugin marketplace add chyyynh/vtodo
+
+# Install the plugin
+/plugin install vtodo
 ```
 
-That's it! The plugin will be installed from the GitHub repository.
+#### Option B: Direct from GitHub
+
+```bash
+# Install directly from GitHub repo
+/plugin install chyyynh/vtodo
+```
 
 **Note**: The plugin provides convenient slash commands that execute `npx vtodo` under the hood. This means vtodo must be installed in your project's `node_modules` for the commands to work.
 
@@ -70,8 +80,9 @@ Open the visual kanban board
 # 1. Install vtodo npm package
 npm install vtodo
 
-# 2. Install the plugin
-/plugin install chyyynh/vtodo
+# 2. Add marketplace and install plugin
+/plugin marketplace add chyyynh/vtodo
+/plugin install vtodo
 
 # 3. Initialize VTodo in your project
 /vtodo-init

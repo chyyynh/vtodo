@@ -1,0 +1,84 @@
+# Source files (users only need built files)
+src/
+example-data/
+
+# VTodo data (development/testing data)
+.vtodo/
+todo/
+todo.md
+
+# Development dependencies
+node_modules/
+
+# Development config
+.vite/
+.env
+.env.*
+.eslintrc*
+.prettierrc*
+.editorconfig
+
+# IDE settings
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# GitHub/CI
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Testing
+coverage/
+.nyc_output/
+*.test.js
+*.spec.js
+test/
+tests/
+__tests__/
+
+# Build config (users don't need build tooling)
+vite.config.js
+tailwind.config.js
+postcss.config.js
+tsconfig.json
+rollup.config.js
+webpack.config.js
+
+# Logs and debug
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Documentation (keep README.md, exclude others if needed)
+docs/
+*.md
+!README.md
+!LICENSE.md
+!CHANGELOG.md
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Lock files (optional - some prefer to include package-lock.json)
+# Uncomment if you don't want to publish lock files
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml

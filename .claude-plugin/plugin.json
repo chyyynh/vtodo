@@ -1,0 +1,20 @@
+{
+  "name": "vtodo",
+  "version": "0.0.2",
+  "description": "Visual Todo Manager for Vibe Coding - Kanban board and CLI tool for managing project todos seamlessly with AI coding assistants",
+  "author": "chyyynh",
+  "homepage": "https://github.com/chyyynh/vtodo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chyyynh/vtodo.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "todo",
+    "task-manager",
+    "kanban",
+    "productivity",
+    "vibe-coding",
+    "ai-workflow"
+  ]
+}

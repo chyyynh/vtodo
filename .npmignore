@@ -18,7 +18,7 @@ node_modules/
 .prettierrc*
 .editorconfig
 
-# IDE settings
+# IDE settings (keep .claude-plugin for plugin support)
 .vscode/
 .idea/
 .claude/
@@ -71,6 +71,7 @@ docs/
 !README.md
 !LICENSE.md
 !CHANGELOG.md
+!PLUGIN.md
 
 # Temporary files
 *.tmp

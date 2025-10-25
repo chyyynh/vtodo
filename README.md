@@ -6,16 +6,44 @@ VTodo is designed to work seamlessly with AI coding assistants like Claude Code,
 
 ## Features
 
-- 🎯 **Visual Kanban Board** - Drag and drop todo between Pending, In Progress, and Completed
+- 🎯 **Visual Kanban Board** - Drag and drop todos between Pending, In Progress, and Completed
 - 💾 **JSON Storage** - Fast, reliable storage with .vtodo/todos.json
 - 🖥️ **Dual Interface** - CLI commands + Web UI
 - ✅ **Todo Management** - Create, edit, delete todos with tags and time estimates
 - 📊 **Progress Tracking** - Checklists with visual progress bars
 - 🚀 **Zero Config** - Just run `vtodo init` to get started
+- 🤖 **Claude Code Plugin** - Native integration with slash commands for AI-powered workflows
 
 ## Quick Start
 
 ### Installation
+
+#### Option 1: Claude Code Plugin (Recommended for Claude Code users)
+
+```bash
+# Step 1: Install npm package in your project
+npm install vtodo
+# or: pnpm add vtodo
+
+# Step 2: Install the plugin from GitHub
+/plugin install chyyynh/vtodo
+
+# Step 3: Initialize in your project
+/vtodo-init
+```
+
+**Available Plugin Commands:**
+- `/vtodo-init` - Initialize VTodo in current project
+- `/vtodo-add` - Add a new todo
+- `/vtodo-list` - List all todos
+- `/vtodo-status` - Update todo status
+- `/vtodo-web` - Open visual kanban board
+
+**Note**: The plugin executes `npx vtodo` commands, so the npm package must be installed in your project first.
+
+[See full plugin documentation →](PLUGIN.md)
+
+#### Option 2: Direct npm Installation
 
 ```bash
 # Run from anywhere
@@ -24,9 +52,9 @@ pnpm add vtodo
 npx vtodo init
 ```
 
-### Setup for for Claude Code, Codex, Cursor or other AI Editors
+### Setup for AI Editors (Manual Configuration)
 
-Add this to your `claude.md` or `agent.md`(edit whatever you like cause I'm not a prompt master):
+If you're not using the Claude Code plugin, you can manually add this to your `claude.md` or `agent.md`:
 
 ```markdown
 # Project Todo Management
@@ -255,6 +283,7 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 - [GitHub Repository](https://github.com/chyyynh/vtodo)
 - [npm Package](https://www.npmjs.com/package/vtodo)
+- [Claude Code Plugin Documentation](PLUGIN.md)
 - [Issue Tracker](https://github.com/chyyynh/vtodo/issues)
 
 ## Author

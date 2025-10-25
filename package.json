@@ -33,6 +33,8 @@
     "dist",
     "bin",
     "lib",
+    ".claude-plugin",
+    "commands",
     "README.md"
   ],
   "scripts": {

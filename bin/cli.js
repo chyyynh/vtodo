@@ -15,7 +15,6 @@ import {
   updateCmd
 } from "../lib/commands.js";
 import { startServer } from "../lib/server.js";
-import { migrateCmd } from "../lib/migrate.js";
 
 program
   .name("vtodo")
@@ -89,12 +88,6 @@ program
   .option("-e, --expected <time>", "Expected time")
   .option("-t, --tags <tags>", "Comma-separated tags")
   .action((id, options) => updateCmd(process.cwd(), id, options));
-
-// Migrate from old format
-program
-  .command("migrate")
-  .description("Migrate from old todo.md format to new JSON format")
-  .action(() => migrateCmd(process.cwd()));
 
 // Start web UI
 program

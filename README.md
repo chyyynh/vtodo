@@ -1,6 +1,6 @@
-# VTodo - Visual Todo Manager for Vibe Coding
+# VTodo - Visualized Todo Manager for Vibe Coding
 
-A visual kanban board and CLI tool for managing project todo. Perfect for vibe coding workflows!
+A visual kanban board and CLI tool for managing project todo. Perfect for vibe coding workflows! V for Vibecoding and Visualized.
 
 VTodo is designed to work seamlessly with AI coding assistants like Claude Code, Cursor, and other AI-powered editors. By integrating vtodo into your AI workflow, you can maintain clear project context and track implementation progress automatically.
 
@@ -252,23 +252,10 @@ vtodo/
 │   ├── commands.js         # CLI command implementations
 │   ├── file-utils.js       # File operations & todo management
 │   ├── server.js           # Express server for web UI
-│   ├── storage-schema.js   # Data structure definitions
-│   └── migrate.js          # Migration tool (todo.md → todos.json)
-├── src/
-│   ├── components/         # React components
-│   │   ├── Board.jsx       # Kanban board with drag & drop
-│   │   ├── Column.jsx      # Status column
-│   │   ├── TodoCard.jsx    # Todo card display
-│   │   └── TodoEditor.jsx  # Todo editor dialog
-│   ├── utils/              # Utility functions
-│   │   ├── FileManager.js  # (deprecated - using API now)
-│   │   └── MarkdownParser.js # (deprecated)
-│   ├── App.jsx             # Main React application
-│   ├── main.jsx            # React entry point
-│   └── index.css           # Global styles (Tailwind)
-├── dist/                   # Build output (published to npm)
+│   └── schema.js           # Data structure definitions
+├── dist/
+│   └── index.html          # Single-file web UI (Vanilla JS + Tailwind CDN)
 ├── package.json
-├── vite.config.js
 └── README.md
 ```
 

@@ -8,15 +8,9 @@ import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 
 const COLUMN_LABELS = {
-  pending: '📋 Pending',
-  inProgress: '🚧 In Progress',
-  completed: '✅ Completed',
-};
-
-const COLUMN_COLORS = {
-  pending: 'bg-gray-50',
-  inProgress: 'bg-blue-50',
-  completed: 'bg-green-50',
+  pending: 'Pending',
+  inProgress: 'In Progress',
+  completed: 'Completed',
 };
 
 function Column({ status, tasks = [], onTaskClick }) {
@@ -35,7 +29,7 @@ function Column({ status, tasks = [], onTaskClick }) {
       }`}
     >
       <Card
-        className={`flex flex-col h-full min-h-[700px] ${COLUMN_COLORS[status]}`}
+        className={`flex flex-col h-full min-h-[700px] bg-card ${isOver ? 'ring-2 ring-ring' : ''}`}
       >
         <CardHeader className="pb-3 flex-shrink-0">
           <div className="flex items-center justify-between">
@@ -63,8 +57,8 @@ function Column({ status, tasks = [], onTaskClick }) {
           </SortableContext>
 
           {safeTasks.length === 0 && (
-            <div className="text-center text-gray-400 py-8">
-              沒有任務
+            <div className="text-center text-muted-foreground py-8">
+              <p>No Todo in this column.</p>
             </div>
           )}
         </CardContent>

@@ -208,18 +208,18 @@ function App() {
   const progressPercentage = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-card shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                📋 VTodo - Markdown Todo Manager
+              <h1 className="text-2xl font-bold text-foreground">
+                VTodo - Vibecidong Todo Manager
               </h1>
               {lastSync && (
-                <p className="text-sm text-gray-500 mt-1">
-                  最後同步: {lastSync.toLocaleTimeString()}
+                <p className="text-sm text-muted-foreground mt-1">
+                  Last Updated: {lastSync.toLocaleTimeString()}
                 </p>
               )}
             </div>
@@ -227,10 +227,10 @@ function App() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <Badge variant="secondary" className="text-sm">
-                  {totalTasks} 個任務
+                  {totalTasks} todos
                 </Badge>
-                <Badge variant="default" className="text-sm bg-green-600 hover:bg-green-700">
-                  {progressPercentage}% 完成
+                <Badge variant="default" className="text-sm">
+                  {progressPercentage}% completed
                 </Badge>
               </div>
               <Button
@@ -238,7 +238,7 @@ function App() {
                 disabled={isLoading}
                 size="default"
               >
-                + 新增任務
+                + Add Todo
               </Button>
               <Button
                 variant="outline"
@@ -246,7 +246,7 @@ function App() {
                 disabled={isLoading}
                 size="default"
               >
-                🔄 重新載入
+                Reload
               </Button>
             </div>
           </div>
@@ -259,10 +259,10 @@ function App() {
           <div className="flex items-center justify-center min-h-[calc(100vh-120px)]">
             <div className="text-center">
               <div className="text-4xl mb-4">⚠️</div>
-              <h2 className="text-xl font-bold text-red-600 mb-2">錯誤</h2>
-              <p className="text-gray-600 mb-4">{error}</p>
+              <h2 className="text-xl font-bold text-destructive mb-2">錯誤</h2>
+              <p className="text-muted-foreground mb-4">{error}</p>
               <Button onClick={loadAllTasks} variant="default">
-                重試
+                Retry
               </Button>
             </div>
           </div>
@@ -270,7 +270,7 @@ function App() {
           <div className="flex items-center justify-center min-h-[calc(100vh-120px)]">
             <div className="text-center">
               <div className="text-4xl mb-4">⏳</div>
-              <p className="text-gray-600">載入中...</p>
+              <p className="text-muted-foreground">載入中...</p>
             </div>
           </div>
         ) : (

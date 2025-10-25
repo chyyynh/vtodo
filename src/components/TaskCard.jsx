@@ -29,14 +29,14 @@ function TaskCard({ task, onClick }) {
       {...attributes}
       {...listeners}
       onClick={() => onClick(task)}
-      className="mb-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow"
+      className="mb-3 cursor-grab active:cursor-grabbing hover:ring-2 hover:ring-ring transition-all bg-card"
     >
       <CardContent className="p-4">
       <div className="flex items-start justify-between mb-2">
-        <h3 className="text-sm font-semibold text-gray-900 flex-1">
+        <h3 className="text-sm font-semibold text-foreground flex-1">
           {task.title}
         </h3>
-        <span className="text-xs text-gray-500 ml-2">{task.id}</span>
+        <span className="text-xs text-muted-foreground ml-2">{task.id}</span>
       </div>
 
       {/* Tags */}
@@ -52,7 +52,7 @@ function TaskCard({ task, onClick }) {
 
       {/* Expected time */}
       {task.expected && (
-        <div className="text-xs text-gray-500 mb-2">
+        <div className="text-xs text-muted-foreground mb-2">
           ⏱️ {task.expected}
         </div>
       )}
@@ -60,17 +60,17 @@ function TaskCard({ task, onClick }) {
       {/* Progress bar */}
       {hasProgress && (
         <div className="mt-3">
-          <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
             <span>進度</span>
             <span>{progress}%</span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-secondary rounded-full h-2">
             <div
-              className="bg-blue-500 h-2 rounded-full transition-all"
+              className="bg-primary h-2 rounded-full transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="mt-1 text-xs text-gray-500">
+          <div className="mt-1 text-xs text-muted-foreground">
             {task.checklist.filter(item => item.checked).length} / {task.checklist.length} 完成
           </div>
         </div>

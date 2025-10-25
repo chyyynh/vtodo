@@ -11,8 +11,12 @@ lerna-debug.log*
 node_modules
 
 # Build output (keep dist for npm publish, but ignore during development if regenerated)
+dist/
 dist-ssr
 *.local
+
+# Development source (only needed for building, not for git)
+index.html
 
 # VTodo data (user's todo data should not be committed)
 .vtodo/

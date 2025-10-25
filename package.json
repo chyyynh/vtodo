@@ -1,7 +1,7 @@
 {
   "name": "vtodo",
-  "version": "0.0.1",
-  "description": "Visual task manager with CLI and kanban board for vibe coding workflows",
+  "version": "0.0.2",
+  "description": "Visualize Vibe coding Todo Manager",
   "keywords": [
     "todo",
     "task-manager",

@@ -101,7 +101,9 @@ program
   .command("web")
   .description("Start web UI server")
   .option("-p, --port <port>", "Port number", "3456")
-  .action((options) => startServer(process.cwd(), options.port));
+  .action(async (options) => {
+    await startServer(process.cwd(), options.port);
+  });
 
 // Default: show help if no command
 if (process.argv.length === 2) {

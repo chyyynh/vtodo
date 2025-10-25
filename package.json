@@ -1,12 +1,13 @@
 {
   "name": "vtodo",
   "version": "0.0.1",
-  "description": "Visual kanban board for managing markdown-based todos",
+  "description": "Visual task manager with CLI and kanban board for vibe coding workflows",
   "keywords": [
     "todo",
-    "markdown",
-    "kanban",
     "task-manager",
+    "kanban",
+    "cli",
+    "productivity",
     "vibe-coding"
   ],
   "homepage": "https://github.com/chyyynh/vtodo#readme",

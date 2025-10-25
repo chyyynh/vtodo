@@ -25,7 +25,7 @@ program
 // Initialize
 program
   .command("init")
-  .description("Initialize .vtodo/tasks.json and /todo folder")
+  .description("Initialize .vtodo/todos.json and /todo folder")
   .action(() => initCmd(process.cwd()));
 
 // Add todo

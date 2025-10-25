@@ -1,18 +1,28 @@
-# VTodo - Visual Task Manager for Vibe Coding
+# VTodo - Visual Todo Manager for Vibe Coding
 
-A visual kanban board and CLI tool for managing project tasks. Perfect for vibe coding workflows!
+A visual kanban board and CLI tool for managing project todo. Perfect for vibe coding workflows!
+
+VTodo is designed to work seamlessly with AI coding assistants like Claude Code, Cursor, and other AI-powered editors. By integrating vtodo into your AI workflow, you can maintain clear project context and track implementation progress automatically.
 
 ## Features
 
-- 🎯 **Visual Kanban Board** - Drag and drop tasks between Pending, In Progress, and Completed
-- 💾 **JSON Storage** - Fast, reliable storage with .vtodo/tasks.json
-- 📝 **Optional Markdown Details** - Add detailed markdown files for complex tasks
+- 🎯 **Visual Kanban Board** - Drag and drop todo between Pending, In Progress, and Completed
+- 💾 **JSON Storage** - Fast, reliable storage with .vtodo/todos.json
+- 📝 **Optional Markdown Details** - Add detailed markdown files for complex todos
 - 🖥️ **Dual Interface** - CLI commands + Web UI
-- ✅ **Task Management** - Create, edit, delete tasks with tags and time estimates
+- ✅ **Todo Management** - Create, edit, delete todos with tags and time estimates
 - 📊 **Progress Tracking** - Checklists with visual progress bars
 - 🚀 **Zero Config** - Just run `vtodo init` to get started
 
 ## Quick Start
+
+### Installation
+
+```bash
+# Run from anywhere
+cd ~/my-project
+pnpm add vtodo
+```
 
 ### Using npx (Recommended)
 
@@ -20,13 +30,41 @@ A visual kanban board and CLI tool for managing project tasks. Perfect for vibe 
 # Navigate to your project directory
 cd ~/my-project
 
-# Initialize vtodo (creates .vtodo/tasks.json)
+# Initialize vtodo (creates .vtodo/todos.json)
 npx vtodo init
 
-# Add a task
-npx vtodo add "Implement user login" --tags backend --expected 2h
+# Setup for Claude Code, Codex, Cursor or other AI Editors
 
-# List tasks
+Add this to your `claude.md` or `agent.md`:
+
+---
+
+# Project Todo Management
+
+This project uses VTodo for todo management.
+
+## VTodo Commands
+- Use `vtodo add "title" --detail` to create todos with detail files
+- All todos are stored in `.vtodo/todos.json`
+- Detail files go in `todo/XXX-todo.md`
+- When implementing features, update todo status with `vtodo status <id> in-progress`
+- Mark complete with `vtodo done <id>`
+
+## Instructions for AI Assistant
+1. When starting a new feature, create a todo with details:
+   - Run `vtodo add "Feature title" --detail --tags <tags>`
+   - Edit the detail file in `todo/` to add implementation notes, technical decisions, and step-by-step plan
+2. Update todo status as you work (`pending` → `in-progress` → `completed`)
+3. Use checklists in detail files for breaking down complex tasks
+4. Always check `vtodo list` before starting work to see current priorities
+
+---
+
+# Add a todo
+Use your agent editor to follow instruction to add todo or 
+`npx vtodo add "Implement user login" --tags backend --expected 2h`
+
+# List todo
 npx vtodo list
 
 # Open web UI
@@ -36,63 +74,8 @@ npx vtodo web
 The web UI will:
 1. Start a local server at http://localhost:3456
 2. Open your browser automatically
-3. Load your tasks from .vtodo/tasks.json
+3. Load your todos from .vtodo/todos.json
 4. Provide a visual kanban board interface
-
-### Global Installation
-
-```bash
-# Install globally
-pnpm add -g vtodo
-
-# Run from anywhere
-cd ~/my-project
-vtodo
-```
-
-### Local Installation
-
-```bash
-# Install as dev dependency
-pnpm add -D vtodo
-
-# Add to package.json scripts
-{
-  "scripts": {
-    "todo": "vtodo"
-  }
-}
-
-# Run
-pnpm todo
-```
-
-### Local Development (Before Publishing)
-
-If you're developing vtodo locally and haven't published it to npm yet:
-
-```bash
-# Step 1: Clone and install
-git clone https://github.com/chyyynh/vtodo.git
-cd vtodo
-pnpm install
-
-# Step 2: Build frontend
-pnpm build
-
-# Step 3: Create global link
-pnpm link --global
-
-# Step 4: Now you can use vtodo command anywhere
-cd ~/my-project
-vtodo init
-vtodo list
-vtodo web
-
-# Alternative: Run directly without linking
-node bin/cli.js init
-node bin/cli.js web
-```
 
 ## File Structure
 
@@ -101,20 +84,20 @@ VTodo creates the following structure in your project:
 ```
 my-project/
 ├── .vtodo/
-│   ├── tasks.json       # Main task storage (JSON format)
+│   ├── todos.json       # Main todo storage (JSON format)
 │   └── backup/          # Backup files (if migrated from old format)
 └── todo/                # Optional: detailed markdown files
-    ├── 001-task.md
-    ├── 002-task.md
+    ├── 001-[slug].md
+    ├── 002-[slug].md
     └── ...
 ```
 
-### tasks.json Format
+### todos.json Format
 
 ```json
 {
   "version": "1.0.0",
-  "tasks": [
+  "todos": [
     {
       "id": "001",
       "title": "Implement user registration",
@@ -134,9 +117,9 @@ my-project/
 }
 ```
 
-### Task Detail File (Optional: todo/001-task.md)
+### Todo Detail File (Optional: todo/001-todo.md)
 
-You can create detailed markdown files for complex tasks using `vtodo edit 1`:
+You can create detailed markdown files for complex todos using `vtodo edit 1`:
 
 ```markdown
 # Implement user registration
@@ -167,39 +150,39 @@ Build complete user registration flow with email verification.
 # Initialize vtodo in current directory
 vtodo init
 
-# Add a new task
-vtodo add "Task title" [options]
-  --description, -d    Task description
+# Add a new todo
+vtodo add "Todo title" [options]
+  --description, -d    Todo description
   --tags, -t          Comma-separated tags
   --expected, -e      Expected time (e.g., "2h", "30min")
   --detail            Create detail markdown file
 
-# List all tasks
+# List all Todo
 vtodo list
 
-# Show task details
+# Show todo details
 vtodo show <id>
 
-# Update task status
+# Update todo status
 vtodo status <id> <pending|in-progress|completed>
 
-# Mark task as done (shortcut)
+# Mark todo as done (shortcut)
 vtodo done <id>
 
-# Reopen task (shortcut)
+# Reopen todo (shortcut)
 vtodo undo <id>
 
-# Update task properties
+# Update todo properties
 vtodo update <id> [options]
   --title             New title
   --description       New description
   --tags              New tags
   --expected          New time estimate
 
-# Edit task detail file
+# Edit todo detail file
 vtodo edit <id>
 
-# Remove a task
+# Remove a todo
 vtodo remove <id>
 
 # Open web UI
@@ -218,40 +201,23 @@ vtodo migrate
 cd ~/my-project
 vtodo init
 
-# Add tasks
+# Add todos
 vtodo add "Setup database" --tags backend --expected 1h
 vtodo add "Design homepage" --tags frontend,ui --expected 3h
 
-# List all tasks
+# List all todos
 vtodo list
 
-# Update task status
+# Update todo status
 vtodo status 1 in-progress
 vtodo done 2
 
-# Show task details
+# Show todo details
 vtodo show 1
 
 # Edit detailed notes (opens $EDITOR)
 vtodo edit 1
 ```
-
-### Web UI Workflow
-
-```bash
-# Start web server
-cd ~/my-project
-vtodo web
-```
-
-The web UI provides:
-- **Visual Kanban Board** - See all tasks organized by status
-- **Drag & Drop** - Move tasks between columns to update status
-- **Task Editor** - Click any task to edit details, checklists, tags
-- **Progress Tracking** - Visual progress bars for task checklists
-- **Real-time Updates** - Changes sync immediately to .vtodo/tasks.json
-
-Web UI works in any modern browser (Chrome, Firefox, Safari, Edge)
 
 ## Project Structure
 
@@ -261,16 +227,16 @@ vtodo/
 │   └── cli.js              # CLI entry point
 ├── lib/
 │   ├── commands.js         # CLI command implementations
-│   ├── file-utils.js       # File operations & task management
+│   ├── file-utils.js       # File operations & todo management
 │   ├── server.js           # Express server for web UI
 │   ├── storage-schema.js   # Data structure definitions
-│   └── migrate.js          # Migration tool (todo.md → tasks.json)
+│   └── migrate.js          # Migration tool (todo.md → todos.json)
 ├── src/
 │   ├── components/         # React components
 │   │   ├── Board.jsx       # Kanban board with drag & drop
 │   │   ├── Column.jsx      # Status column
-│   │   ├── TaskCard.jsx    # Task card display
-│   │   └── TaskEditor.jsx  # Task editor dialog
+│   │   ├── TodoCard.jsx    # Todo card display
+│   │   └── TodoEditor.jsx  # Todo editor dialog
 │   ├── utils/              # Utility functions
 │   │   ├── FileManager.js  # (deprecated - using API now)
 │   │   └── MarkdownParser.js # (deprecated)
@@ -282,42 +248,6 @@ vtodo/
 ├── vite.config.js
 └── README.md
 ```
-
-## Tech Stack
-
-- **CLI**: Commander.js + Chalk (colored output)
-- **Storage**: JSON-based with optional Markdown detail files
-- **Web Server**: Express.js
-- **Frontend**: React 19 + Vite
-- **Drag & Drop**: @dnd-kit
-- **Styling**: Tailwind CSS + Radix UI
-- **Markdown**: markdown-it (for detail files)
-
-## Troubleshooting
-
-### Tasks not showing in CLI
-Run `vtodo init` first to create `.vtodo/tasks.json`.
-
-### Web UI shows "Failed to fetch tasks"
-- Make sure you're in a directory with `.vtodo/tasks.json`
-- Check that the file has valid JSON format
-- Try restarting the server: `vtodo web`
-
-### "dist folder not found" error
-Run `pnpm build` before using `pnpm start` (for development).
-
-### Editor not opening for `vtodo edit`
-Set your `EDITOR` environment variable:
-```bash
-export EDITOR=vim     # or nano, code, etc.
-```
-
-### Migrating from old todo.md format
-If you have existing `todo.md` files:
-```bash
-vtodo migrate
-```
-This will backup your old files to `.vtodo/backup/` and create `tasks.json`.
 
 ## Contributing
 

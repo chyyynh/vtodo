@@ -1,5 +1,5 @@
-# Source files (users only need built files)
-src/
+# Source files (no longer needed - now using single HTML file)
+# src/ - removed in v0.0.3
 example-data/
 
 # VTodo data (development/testing data)

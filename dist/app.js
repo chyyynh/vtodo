@@ -1,0 +1,819 @@
+    // ============================================
+    // State Management
+    // ============================================
+    const state = {
+      todos: [],
+      loading: false,
+      error: null
+    };
+
+    const listeners = [];
+
+    function setState(updates) {
+      Object.assign(state, updates);
+      listeners.forEach(fn => fn(state));
+    }
+
+    function subscribe(listener) {
+      listeners.push(listener);
+      return () => {
+        const index = listeners.indexOf(listener);
+        if (index > -1) listeners.splice(index, 1);
+      };
+    }
+
+    // Generate issue ID - just use the todo's actual id
+    function generateIssueId(todoId) {
+      return todoId;
+    }
+
+    // ============================================
+    // API Client
+    // ============================================
+    const API = {
+      async fetchTodos() {
+        const response = await fetch('/api/todos');
+        const data = await response.json();
+        return data.todos || [];
+      },
+
+      async fetchTodoDetail(id) {
+        const response = await fetch(`/api/todos/${id}`);
+        const data = await response.json();
+        return data.todo;
+      },
+
+      async createTodo(todoData) {
+        const response = await fetch('/api/todos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(todoData)
+        });
+        const data = await response.json();
+        return data.todo;
+      },
+
+      async updateTodo(id, updates) {
+        const response = await fetch(`/api/todos/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        });
+        const data = await response.json();
+        return data.todo;
+      },
+
+      async deleteTodo(id) {
+        await fetch(`/api/todos/${id}`, { method: 'DELETE' });
+      },
+
+      async updateDetail(id, content) {
+        await fetch(`/api/todos/${id}/detail`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content })
+        });
+      }
+    };
+
+    // ============================================
+    // Utilities
+    // ============================================
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    function getStatusLabel(status) {
+      const labels = {
+        'pending': 'Todo',
+        'in-progress': 'In Progress',
+        'backlog': 'Backlog',
+        'completed': 'Done'
+      };
+      return labels[status] || status;
+    }
+
+    function getStatusIcon(status) {
+      if (status === 'completed') {
+        return '<span class="status-icon status-completed">✓</span>';
+      } else if (status === 'in-progress') {
+        return '<span class="status-icon status-in-progress">●</span>';
+      } else if (status === 'backlog') {
+        return '<span class="status-icon status-backlog"></span>';
+      } else {
+        return '<span class="status-icon status-pending"></span>';
+      }
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const itemDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+      if (itemDate.getTime() === today.getTime()) {
+        return 'Today';
+      }
+
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      if (itemDate.getTime() === yesterday.getTime()) {
+        return 'Yesterday';
+      }
+
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    // ============================================
+    // Rendering Functions
+    // ============================================
+    function groupTodosByStatus(todos) {
+      const groups = {
+        'in-progress': [],
+        'pending': [],
+        'backlog': [],
+        'completed': []
+      };
+
+      todos.forEach(todo => {
+        if (groups[todo.status]) {
+          groups[todo.status].push(todo);
+        }
+      });
+
+      return groups;
+    }
+
+    function renderStatusSection(status, todos, label) {
+      const section = document.createElement('div');
+      section.className = 'status-section';
+      section.dataset.status = status;
+
+      // Section header
+      const header = document.createElement('div');
+      header.className = 'section-header flex items-center justify-between py-1 bg-gray-800 border-b border-gray-800';
+
+      const leftPart = document.createElement('div');
+      leftPart.className = 'flex items-center gap-2';
+
+      const icon = document.createElement('span');
+      icon.innerHTML = getStatusIcon(status);
+
+      const title = document.createElement('h2');
+      title.className = 'text-sm font-semibold text-gray-400';
+      title.textContent = label;
+
+      const count = document.createElement('span');
+      count.className = 'text-sm text-gray-600';
+      count.textContent = todos.length;
+
+      leftPart.appendChild(icon);
+      leftPart.appendChild(title);
+      leftPart.appendChild(count);
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'p-1 text-gray-600 hover:text-gray-400 rounded hover:bg-gray-800';
+      addBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>';
+      addBtn.addEventListener('click', () => openEditModal(null));
+
+      header.appendChild(leftPart);
+      header.appendChild(addBtn);
+      section.appendChild(header);
+
+      // Drop zone setup
+      section.addEventListener('dragover', handleDragOver);
+      section.addEventListener('drop', handleDrop);
+      section.addEventListener('dragleave', handleDragLeave);
+
+      // Issues list
+      todos.forEach((todo) => {
+        section.appendChild(renderIssueItem(todo));
+      });
+
+      return section;
+    }
+
+    function renderIssueItem(todo) {
+      const item = document.createElement('div');
+      item.className = 'issue-item flex items-center gap-3 py-3 px-3 cursor-pointer';
+      item.dataset.todoId = todo.id;
+      item.draggable = true;
+
+      // Drag events
+      item.addEventListener('dragstart', handleDragStart);
+      item.addEventListener('dragend', handleDragEnd);
+
+      // Click event - only trigger if not dragging
+      let isDragging = false;
+      item.addEventListener('mousedown', () => {
+        isDragging = false;
+      });
+      item.addEventListener('dragstart', () => {
+        isDragging = true;
+      });
+      item.addEventListener('click', (e) => {
+        if (!isDragging) {
+          openEditModal(todo.id);
+        }
+        isDragging = false;
+      });
+
+      // Status icon
+      const statusIcon = document.createElement('div');
+      statusIcon.innerHTML = getStatusIcon(todo.status);
+      item.appendChild(statusIcon);
+
+      // Issue ID
+      const issueId = document.createElement('div');
+      issueId.className = 'text-sm text-gray-600 font-mono w-16 flex-shrink-0';
+      issueId.textContent = generateIssueId(todo.id);
+      item.appendChild(issueId);
+
+      // Title and subtasks
+      const titleContainer = document.createElement('div');
+      titleContainer.className = 'flex-1 min-w-0';
+
+      const titleText = document.createElement('div');
+      titleText.className = 'text-sm text-gray-300 truncate';
+      const subtaskCount = todo.checklist && todo.checklist.length > 0 ? ` (${todo.checklist.length})` : '';
+      titleText.textContent = todo.title + subtaskCount;
+
+      titleContainer.appendChild(titleText);
+      item.appendChild(titleContainer);
+
+      // User icon (placeholder)
+      const userIcon = document.createElement('div');
+      userIcon.className = 'w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs text-gray-400';
+      userIcon.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>';
+      item.appendChild(userIcon);
+
+      // Date
+      const dateDiv = document.createElement('div');
+      dateDiv.className = 'text-xs text-gray-600 w-20 text-right flex-shrink-0';
+      dateDiv.textContent = formatDate(todo.createdAt || new Date().toISOString());
+      item.appendChild(dateDiv);
+
+      return item;
+    }
+
+    function render() {
+      const issuesList = document.getElementById('issues-list');
+      const loadingEl = document.getElementById('loading');
+      const errorEl = document.getElementById('error');
+
+      if (state.loading) {
+        issuesList.classList.add('hidden');
+        loadingEl.classList.remove('hidden');
+        errorEl.classList.add('hidden');
+        return;
+      }
+
+      loadingEl.classList.add('hidden');
+
+      if (state.error) {
+        errorEl.classList.remove('hidden');
+        document.getElementById('error-message').textContent = state.error;
+        issuesList.classList.add('hidden');
+        return;
+      }
+
+      errorEl.classList.add('hidden');
+      issuesList.classList.remove('hidden');
+      issuesList.innerHTML = '';
+
+      // Group by status
+      const groups = groupTodosByStatus(state.todos);
+
+      // Render sections in order: In Progress, Todo, Backlog, Done
+      const sections = [
+        { status: 'in-progress', label: 'In Progress', todos: groups['in-progress'] },
+        { status: 'pending', label: 'Todo', todos: groups['pending'] },
+        { status: 'backlog', label: 'Backlog', todos: groups['backlog'] },
+        { status: 'completed', label: 'Done', todos: groups['completed'] }
+      ];
+
+      sections.forEach(({ status, label, todos }) => {
+        const section = renderStatusSection(status, todos, label);
+        issuesList.appendChild(section);
+      });
+    }
+
+    // ============================================
+    // Drag & Drop
+    // ============================================
+    let draggedElement = null;
+
+    function handleDragStart(e) {
+      draggedElement = e.currentTarget;
+      e.currentTarget.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', e.currentTarget.innerHTML);
+    }
+
+    function handleDragEnd(e) {
+      e.currentTarget.classList.remove('dragging');
+      // Remove drag-over from all sections
+      document.querySelectorAll('.status-section').forEach(section => {
+        section.classList.remove('drag-over');
+      });
+    }
+
+    function handleDragOver(e) {
+      if (e.preventDefault) e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+
+      // Find the section element
+      let section = e.target;
+      while (section && !section.classList.contains('status-section')) {
+        section = section.parentElement;
+      }
+
+      // Remove drag-over from all sections first
+      document.querySelectorAll('.status-section').forEach(s => {
+        if (s !== section) {
+          s.classList.remove('drag-over');
+        }
+      });
+
+      // Add drag-over to current section
+      if (section) {
+        section.classList.add('drag-over');
+      }
+      return false;
+    }
+
+    function handleDragLeave(e) {
+      // Find the section element
+      let section = e.target;
+      while (section && !section.classList.contains('status-section')) {
+        section = section.parentElement;
+      }
+
+      // Only remove if we're actually leaving the section (not going to a child)
+      if (section && e.relatedTarget) {
+        let related = e.relatedTarget;
+        while (related && related !== section) {
+          related = related.parentElement;
+        }
+        // If related target is not inside this section, remove the class
+        if (related !== section) {
+          section.classList.remove('drag-over');
+        }
+      }
+    }
+
+    async function handleDrop(e) {
+      if (e.stopPropagation) e.stopPropagation();
+      e.preventDefault();
+
+      // Find the section element
+      let section = e.target;
+      while (section && !section.classList.contains('status-section')) {
+        section = section.parentElement;
+      }
+
+      if (section) {
+        section.classList.remove('drag-over');
+      }
+
+      if (draggedElement && section) {
+        const todoId = draggedElement.dataset.todoId;
+        const newStatus = section.dataset.status;
+        const currentTodo = state.todos.find(t => t.id === todoId);
+
+        console.log(`🎯 Dropping todo ${todoId}: ${currentTodo?.status} → ${newStatus}`);
+
+        if (currentTodo && currentTodo.status !== newStatus) {
+          try {
+            console.log(`📝 Updating todos.json: ${todoId} status to "${newStatus}"`);
+            await API.updateTodo(todoId, { status: newStatus });
+            await loadTodos();
+            console.log('✅ Status updated successfully in todos.json');
+          } catch (error) {
+            console.error('❌ Error updating todo:', error);
+            setState({ error: 'Failed to update todo status' });
+          }
+        } else if (currentTodo && currentTodo.status === newStatus) {
+          console.log('ℹ️ Same status, no update needed');
+        }
+      }
+
+      return false;
+    }
+
+    // ============================================
+    // Modal Management
+    // ============================================
+    function renderDetailFileModal(todo) {
+      const modal = document.getElementById('modal');
+      const modalContent = modal.querySelector('div');
+
+      // Render markdown to HTML
+      const renderedMarkdown = marked.parse(todo.detailContent || '');
+
+      modalContent.innerHTML = `
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-2xl font-bold text-gray-200">${escapeHtml(todo.title)}</h2>
+            <p class="text-sm text-gray-500 mt-1">ID: ${todo.id} • Detail File</p>
+          </div>
+          <button id="edit-mode-btn" class="px-3 py-1.5 text-sm bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition">
+            Edit Mode
+          </button>
+        </div>
+
+        <div id="detail-view" class="mb-4">
+          <div class="markdown-content bg-[#1a1a1a] border border-gray-700 rounded-lg p-6 max-h-[60vh] overflow-y-auto">
+            ${renderedMarkdown}
+          </div>
+        </div>
+
+        <div id="detail-edit" class="hidden mb-4">
+          <textarea
+            id="detail-content"
+            rows="20"
+            class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent font-mono text-sm"
+            placeholder="Enter markdown content..."
+          >${escapeHtml(todo.detailContent)}</textarea>
+        </div>
+
+        <div class="flex justify-between items-center">
+          <div class="text-xs text-gray-500">
+            Path: <code class="bg-[#1a1a1a] px-2 py-1 rounded">todo/${todo.id}-todo.md</code>
+          </div>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              id="cancel-btn"
+              class="px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition"
+            >
+              Close
+            </button>
+            <button
+              type="button"
+              id="save-detail-btn"
+              class="hidden px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition"
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Toggle edit mode
+      document.getElementById('edit-mode-btn').addEventListener('click', () => {
+        const viewDiv = document.getElementById('detail-view');
+        const editDiv = document.getElementById('detail-edit');
+        const saveBtn = document.getElementById('save-detail-btn');
+        const editBtn = document.getElementById('edit-mode-btn');
+        const markdownContainer = viewDiv.querySelector('.markdown-content');
+
+        const isEditing = !editDiv.classList.contains('hidden');
+
+        if (isEditing) {
+          // Switch to view mode - re-render markdown from textarea
+          const currentContent = document.getElementById('detail-content').value;
+          const renderedHtml = marked.parse(currentContent);
+          markdownContainer.innerHTML = renderedHtml;
+
+          viewDiv.classList.remove('hidden');
+          editDiv.classList.add('hidden');
+          saveBtn.classList.add('hidden');
+          editBtn.textContent = 'Edit Mode';
+        } else {
+          // Switch to edit mode
+          viewDiv.classList.add('hidden');
+          editDiv.classList.remove('hidden');
+          saveBtn.classList.remove('hidden');
+          editBtn.textContent = 'View Mode';
+        }
+      });
+
+      // Save changes
+      document.getElementById('save-detail-btn').addEventListener('click', async () => {
+        const content = document.getElementById('detail-content').value;
+        try {
+          await API.updateDetail(todo.id, content);
+          closeModal();
+          await loadTodos();
+          console.log('✅ Detail file updated successfully');
+        } catch (error) {
+          console.error('❌ Error updating detail file:', error);
+          setState({ error: 'Failed to update detail file' });
+        }
+      });
+
+      // Close modal
+      document.getElementById('cancel-btn').addEventListener('click', closeModal);
+    }
+
+    async function openEditModal(todoId = null) {
+      const modal = document.getElementById('modal');
+      const modalContent = modal.querySelector('div');
+
+      let todo = null;
+      if (todoId) {
+        try {
+          todo = await API.fetchTodoDetail(todoId);
+        } catch (error) {
+          console.error('Error fetching todo:', error);
+          setState({ error: 'Failed to load todo details' });
+          return;
+        }
+      }
+
+      const isNew = !todo;
+
+      // If todo has detailFile, show markdown editor
+      if (!isNew && todo.hasDetailFile && todo.detailContent) {
+        renderDetailFileModal(todo);
+        modal.classList.remove('hidden');
+        return;
+      }
+
+      const title = isNew ? 'Create New Todo' : 'Edit Todo';
+
+      modalContent.innerHTML = `
+        <h2 class="text-2xl font-bold mb-4 text-gray-200">${title}</h2>
+        <form id="todo-form">
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-2 text-gray-300">Title *</label>
+            <input
+              type="text"
+              name="title"
+              value="${escapeHtml(todo?.title || '')}"
+              required
+              class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent"
+              placeholder="Enter todo title"
+            >
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-2 text-gray-300">Description</label>
+            <textarea
+              name="description"
+              rows="3"
+              class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent"
+              placeholder="Enter description"
+            >${escapeHtml(todo?.description || '')}</textarea>
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-2 text-gray-300">Expected Outcome</label>
+            <textarea
+              name="expected"
+              rows="2"
+              class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent"
+              placeholder="What should be achieved?"
+            >${escapeHtml(todo?.expected || '')}</textarea>
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-2 text-gray-300">Tags (comma separated)</label>
+            <input
+              type="text"
+              name="tags"
+              value="${(todo?.tags || []).join(', ')}"
+              class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent"
+              placeholder="e.g., frontend, bug, urgent"
+            >
+          </div>
+
+          ${!isNew ? `
+          <div class="mb-4">
+            <label class="block text-sm font-medium mb-2 text-gray-300">Status</label>
+            <select
+              name="status"
+              class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent"
+            >
+              <option value="in-progress" ${todo.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+              <option value="pending" ${todo.status === 'pending' ? 'selected' : ''}>Todo</option>
+              <option value="backlog" ${todo.status === 'backlog' ? 'selected' : ''}>Backlog</option>
+              <option value="completed" ${todo.status === 'completed' ? 'selected' : ''}>Done</option>
+            </select>
+          </div>
+          ` : ''}
+
+          <div class="mb-6">
+            <label class="block text-sm font-medium mb-2 text-gray-300">Checklist</label>
+            <div id="checklist-container" class="space-y-2 mb-2">
+              ${renderChecklistItems(todo?.checklist || [])}
+            </div>
+            <button
+              type="button"
+              id="add-checklist-item"
+              class="text-sm text-blue-400 hover:text-blue-300"
+            >
+              + Add checklist item
+            </button>
+          </div>
+
+          <div class="flex justify-end gap-2">
+            <button
+              type="button"
+              id="cancel-btn"
+              class="px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition"
+            >
+              ${isNew ? 'Create' : 'Save'}
+            </button>
+            ${!isNew ? `
+            <button
+              type="button"
+              id="delete-btn"
+              class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition"
+            >
+              Delete
+            </button>
+            ` : ''}
+          </div>
+        </form>
+      `;
+
+      modal.classList.remove('hidden');
+
+      // Event listeners
+      document.getElementById('cancel-btn').addEventListener('click', closeModal);
+
+      if (!isNew) {
+        document.getElementById('delete-btn').addEventListener('click', () => deleteTodoHandler(todoId));
+      }
+
+      document.getElementById('add-checklist-item').addEventListener('click', addChecklistItem);
+
+      document.getElementById('todo-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveTodo(todoId);
+      });
+
+      // Setup checklist item listeners
+      setupChecklistListeners();
+    }
+
+    function renderChecklistItems(checklist) {
+      if (!checklist || checklist.length === 0) {
+        return '<p class="text-sm text-gray-500">No checklist items yet</p>';
+      }
+
+      return checklist.map((item, index) => `
+        <div class="checklist-item flex items-center gap-2 p-2 border border-gray-700 rounded bg-[#1a1a1a]" data-index="${index}">
+          <input
+            type="checkbox"
+            class="checklist-checkbox"
+            ${item.done ? 'checked' : ''}
+          >
+          <input
+            type="text"
+            class="checklist-text flex-1 px-2 py-1 border-0 bg-transparent text-gray-200 focus:ring-1 focus:ring-gray-600 rounded"
+            value="${escapeHtml(item.text)}"
+          >
+          <button type="button" class="remove-checklist text-red-400 hover:text-red-300 text-sm">Remove</button>
+        </div>
+      `).join('');
+    }
+
+    function setupChecklistListeners() {
+      document.querySelectorAll('.remove-checklist').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.target.closest('.checklist-item').remove();
+        });
+      });
+    }
+
+    function addChecklistItem() {
+      const container = document.getElementById('checklist-container');
+      const existingMessage = container.querySelector('p');
+      if (existingMessage) {
+        existingMessage.remove();
+      }
+
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'checklist-item flex items-center gap-2 p-2 border border-gray-700 rounded bg-[#1a1a1a]';
+      itemDiv.innerHTML = `
+        <input type="checkbox" class="checklist-checkbox">
+        <input
+          type="text"
+          class="checklist-text flex-1 px-2 py-1 border-0 bg-transparent text-gray-200 focus:ring-1 focus:ring-gray-600 rounded"
+          placeholder="New checklist item"
+        >
+        <button type="button" class="remove-checklist text-red-400 hover:text-red-300 text-sm">Remove</button>
+      `;
+
+      container.appendChild(itemDiv);
+
+      itemDiv.querySelector('.remove-checklist').addEventListener('click', () => {
+        itemDiv.remove();
+      });
+
+      itemDiv.querySelector('.checklist-text').focus();
+    }
+
+    function getChecklistFromForm() {
+      const items = [];
+      document.querySelectorAll('.checklist-item').forEach(item => {
+        const text = item.querySelector('.checklist-text').value.trim();
+        if (text) {
+          items.push({
+            text,
+            done: item.querySelector('.checklist-checkbox').checked
+          });
+        }
+      });
+      return items;
+    }
+
+    async function saveTodo(todoId) {
+      const form = document.getElementById('todo-form');
+      const formData = new FormData(form);
+
+      const todoData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        expected: formData.get('expected'),
+        tags: formData.get('tags').split(',').map(t => t.trim()).filter(Boolean),
+        checklist: getChecklistFromForm()
+      };
+
+      if (!todoId) {
+        // Creating new todo
+        todoData.status = 'pending';
+      } else {
+        // Updating existing todo
+        todoData.status = formData.get('status');
+      }
+
+      try {
+        if (todoId) {
+          await API.updateTodo(todoId, todoData);
+        } else {
+          await API.createTodo(todoData);
+        }
+        await loadTodos();
+        closeModal();
+      } catch (error) {
+        console.error('Error saving todo:', error);
+        setState({ error: 'Failed to save todo' });
+      }
+    }
+
+    async function deleteTodoHandler(id) {
+      if (confirm('Are you sure you want to delete this todo?')) {
+        try {
+          await API.deleteTodo(id);
+          await loadTodos();
+          closeModal();
+        } catch (error) {
+          console.error('Error deleting todo:', error);
+          setState({ error: 'Failed to delete todo' });
+        }
+      }
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.add('hidden');
+    }
+
+    // ============================================
+    // App Initialization
+    // ============================================
+    async function loadTodos() {
+      setState({ loading: true, error: null });
+      try {
+        const todos = await API.fetchTodos();
+        setState({ todos, loading: false });
+      } catch (error) {
+        console.error('Error loading todos:', error);
+        setState({ error: error.message, loading: false });
+      }
+    }
+
+    // Subscribe to state changes
+    subscribe(render);
+
+    // Initialize app
+    loadTodos();
+
+    // Event listeners
+    document.getElementById('modal').addEventListener('click', (e) => {
+      if (e.target.id === 'modal') closeModal();
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // ESC to close modal
+      if (e.key === 'Escape') {
+        closeModal();
+      }
+      // Ctrl/Cmd + N to add new todo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        openEditModal(null);
+      }
+    });

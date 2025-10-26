@@ -1,5 +1,7 @@
 # VTodo - Visualized Todo Manager for Vibe Coding
 
+<img width="1707" height="855" alt="image" src="https://github.com/user-attachments/assets/df696f41-c2af-4e39-bb00-ecbe7fbeb3a2" />
+
 A visual kanban board and CLI tool for managing project todo. Perfect for vibe coding workflows! V for Vibecoding and Visualized.
 
 VTodo is designed to work seamlessly with AI coding assistants like Claude Code, Cursor, and other AI-powered editors. By integrating vtodo into your AI workflow, you can maintain clear project context and track implementation progress automatically.

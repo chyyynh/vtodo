@@ -153,12 +153,13 @@
 
       // Section header
       const header = document.createElement('div');
-      header.className = 'section-header flex items-center justify-between py-1 bg-gray-800 border-b border-gray-800';
+      header.className = 'section-header flex items-center justify-between px-2 py-1 bg-gray-800 border-b border-gray-800';
 
       const leftPart = document.createElement('div');
       leftPart.className = 'flex items-center gap-2';
 
       const icon = document.createElement('span');
+      icon.className = 'flex items-center';
       icon.innerHTML = getStatusIcon(status);
 
       const title = document.createElement('h2');
@@ -222,6 +223,7 @@
 
       // Status icon
       const statusIcon = document.createElement('div');
+      statusIcon.className = 'flex items-center';
       statusIcon.innerHTML = getStatusIcon(todo.status);
       item.appendChild(statusIcon);
 

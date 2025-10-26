@@ -4,7 +4,9 @@
     const state = {
       todos: [],
       loading: false,
-      error: null
+      error: null,
+      viewMode: 'list', // 'list' or 'board'
+      selectedTags: [] // Array of selected tag strings for filtering
     };
 
     const listeners = [];
@@ -124,6 +126,28 @@
       }
 
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function getAllTags(todos) {
+      const tagsSet = new Set();
+      todos.forEach(todo => {
+        if (todo.tags && Array.isArray(todo.tags)) {
+          todo.tags.forEach(tag => tagsSet.add(tag));
+        }
+      });
+      return Array.from(tagsSet).sort();
+    }
+
+    function filterTodosByTags(todos, selectedTags) {
+      if (selectedTags.length === 0) {
+        return todos;
+      }
+      return todos.filter(todo => {
+        if (!todo.tags || !Array.isArray(todo.tags)) {
+          return false;
+        }
+        return selectedTags.some(tag => todo.tags.includes(tag));
+      });
     }
 
     // ============================================
@@ -260,6 +284,135 @@
       return item;
     }
 
+    function renderBoardIssueItem(todo) {
+      const item = document.createElement('div');
+      item.className = 'board-card bg-[#252525] border border-gray-700 rounded-lg p-3 mb-2 cursor-pointer hover:bg-[#2a2a2a] transition';
+      item.dataset.todoId = todo.id;
+      item.draggable = true;
+
+      // Drag events
+      item.addEventListener('dragstart', handleDragStart);
+      item.addEventListener('dragend', handleDragEnd);
+
+      // Click event
+      let isDragging = false;
+      item.addEventListener('mousedown', () => {
+        isDragging = false;
+      });
+      item.addEventListener('dragstart', () => {
+        isDragging = true;
+      });
+      item.addEventListener('click', () => {
+        if (!isDragging) {
+          openEditModal(todo.id);
+        }
+        isDragging = false;
+      });
+
+      // Issue ID
+      const issueId = document.createElement('div');
+      issueId.className = 'text-xs text-gray-600 font-mono mb-2';
+      issueId.textContent = generateIssueId(todo.id);
+      item.appendChild(issueId);
+
+      // Title
+      const titleText = document.createElement('div');
+      titleText.className = 'text-sm text-gray-200 mb-2 line-clamp-2';
+      titleText.textContent = todo.title;
+      item.appendChild(titleText);
+
+      // Tags
+      if (todo.tags && todo.tags.length > 0) {
+        const tagsContainer = document.createElement('div');
+        tagsContainer.className = 'flex flex-wrap gap-1 mb-2';
+        todo.tags.slice(0, 2).forEach(tag => {
+          const tagEl = document.createElement('span');
+          tagEl.className = 'text-xs px-2 py-0.5 bg-gray-700 text-gray-300 rounded';
+          tagEl.textContent = tag;
+          tagsContainer.appendChild(tagEl);
+        });
+        if (todo.tags.length > 2) {
+          const moreTag = document.createElement('span');
+          moreTag.className = 'text-xs px-2 py-0.5 bg-gray-700 text-gray-400 rounded';
+          moreTag.textContent = `+${todo.tags.length - 2}`;
+          tagsContainer.appendChild(moreTag);
+        }
+        item.appendChild(tagsContainer);
+      }
+
+      // Footer with checklist count
+      if (todo.checklist && todo.checklist.length > 0) {
+        const footer = document.createElement('div');
+        footer.className = 'flex items-center justify-between text-xs text-gray-500';
+        const completedCount = todo.checklist.filter(item => item.done).length;
+        footer.innerHTML = `
+          <div class="flex items-center gap-1">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+            </svg>
+            <span>${completedCount}/${todo.checklist.length}</span>
+          </div>
+        `;
+        item.appendChild(footer);
+      }
+
+      return item;
+    }
+
+    function renderBoardStatusColumn(status, todos, label) {
+      const column = document.createElement('div');
+      column.className = 'board-column flex-1 min-w-[280px]';
+      column.dataset.status = status;
+
+      // Column header
+      const header = document.createElement('div');
+      header.className = 'flex items-center justify-between mb-3 px-2';
+
+      const leftPart = document.createElement('div');
+      leftPart.className = 'flex items-center gap-2';
+
+      const icon = document.createElement('span');
+      icon.className = 'flex items-center';
+      icon.innerHTML = getStatusIcon(status);
+
+      const title = document.createElement('h3');
+      title.className = 'text-sm font-semibold text-gray-300';
+      title.textContent = label;
+
+      const count = document.createElement('span');
+      count.className = 'text-sm text-gray-600';
+      count.textContent = todos.length;
+
+      leftPart.appendChild(icon);
+      leftPart.appendChild(title);
+      leftPart.appendChild(count);
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'p-1 text-gray-600 hover:text-gray-400 rounded hover:bg-gray-800';
+      addBtn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>';
+      addBtn.addEventListener('click', () => openEditModal(null));
+
+      header.appendChild(leftPart);
+      header.appendChild(addBtn);
+      column.appendChild(header);
+
+      // Column content
+      const content = document.createElement('div');
+      content.className = 'board-column-content space-y-2 min-h-[200px] p-2 rounded-lg';
+
+      // Drop zone setup
+      content.addEventListener('dragover', handleDragOver);
+      content.addEventListener('drop', handleDrop);
+      content.addEventListener('dragleave', handleDragLeave);
+
+      todos.forEach(todo => {
+        content.appendChild(renderBoardIssueItem(todo));
+      });
+
+      column.appendChild(content);
+      return column;
+    }
+
     function render() {
       const issuesList = document.getElementById('issues-list');
       const loadingEl = document.getElementById('loading');
@@ -285,8 +438,11 @@
       issuesList.classList.remove('hidden');
       issuesList.innerHTML = '';
 
+      // Apply tag filter
+      const filteredTodos = filterTodosByTags(state.todos, state.selectedTags);
+
       // Group by status
-      const groups = groupTodosByStatus(state.todos);
+      const groups = groupTodosByStatus(filteredTodos);
 
       // Render sections in order: In Progress, Todo, Backlog, Done
       const sections = [
@@ -296,10 +452,21 @@
         { status: 'completed', label: 'Done', todos: groups['completed'] }
       ];
 
-      sections.forEach(({ status, label, todos }) => {
-        const section = renderStatusSection(status, todos, label);
-        issuesList.appendChild(section);
-      });
+      if (state.viewMode === 'board') {
+        // Board View - horizontal columns
+        issuesList.className = 'px-6 py-4 flex gap-4 overflow-x-auto';
+        sections.forEach(({ status, label, todos }) => {
+          const column = renderBoardStatusColumn(status, todos, label);
+          issuesList.appendChild(column);
+        });
+      } else {
+        // List View - vertical sections
+        issuesList.className = 'px-6 py-4';
+        sections.forEach(({ status, label, todos }) => {
+          const section = renderStatusSection(status, todos, label);
+          issuesList.appendChild(section);
+        });
+      }
     }
 
     // ============================================
@@ -316,8 +483,8 @@
 
     function handleDragEnd(e) {
       e.currentTarget.classList.remove('dragging');
-      // Remove drag-over from all sections
-      document.querySelectorAll('.status-section').forEach(section => {
+      // Remove drag-over from all sections and columns
+      document.querySelectorAll('.status-section, .board-column-content').forEach(section => {
         section.classList.remove('drag-over');
       });
     }
@@ -326,42 +493,42 @@
       if (e.preventDefault) e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
 
-      // Find the section element
-      let section = e.target;
-      while (section && !section.classList.contains('status-section')) {
-        section = section.parentElement;
+      // Find the section or column element
+      let container = e.target;
+      while (container && !container.classList.contains('status-section') && !container.classList.contains('board-column-content')) {
+        container = container.parentElement;
       }
 
-      // Remove drag-over from all sections first
-      document.querySelectorAll('.status-section').forEach(s => {
-        if (s !== section) {
-          s.classList.remove('drag-over');
+      // Remove drag-over from all containers first
+      document.querySelectorAll('.status-section, .board-column-content').forEach(c => {
+        if (c !== container) {
+          c.classList.remove('drag-over');
         }
       });
 
-      // Add drag-over to current section
-      if (section) {
-        section.classList.add('drag-over');
+      // Add drag-over to current container
+      if (container) {
+        container.classList.add('drag-over');
       }
       return false;
     }
 
     function handleDragLeave(e) {
-      // Find the section element
-      let section = e.target;
-      while (section && !section.classList.contains('status-section')) {
-        section = section.parentElement;
+      // Find the container element
+      let container = e.target;
+      while (container && !container.classList.contains('status-section') && !container.classList.contains('board-column-content')) {
+        container = container.parentElement;
       }
 
-      // Only remove if we're actually leaving the section (not going to a child)
-      if (section && e.relatedTarget) {
+      // Only remove if we're actually leaving the container (not going to a child)
+      if (container && e.relatedTarget) {
         let related = e.relatedTarget;
-        while (related && related !== section) {
+        while (related && related !== container) {
           related = related.parentElement;
         }
-        // If related target is not inside this section, remove the class
-        if (related !== section) {
-          section.classList.remove('drag-over');
+        // If related target is not inside this container, remove the class
+        if (related !== container) {
+          container.classList.remove('drag-over');
         }
       }
     }
@@ -370,19 +537,25 @@
       if (e.stopPropagation) e.stopPropagation();
       e.preventDefault();
 
-      // Find the section element
-      let section = e.target;
-      while (section && !section.classList.contains('status-section')) {
-        section = section.parentElement;
+      // Find the container element (section or column)
+      let container = e.target;
+      while (container && !container.classList.contains('status-section') && !container.classList.contains('board-column-content')) {
+        container = container.parentElement;
       }
 
-      if (section) {
-        section.classList.remove('drag-over');
+      if (container) {
+        container.classList.remove('drag-over');
       }
 
-      if (draggedElement && section) {
+      // Get status from parent column or section
+      let statusContainer = container;
+      if (container && container.classList.contains('board-column-content')) {
+        statusContainer = container.parentElement; // Get the board-column
+      }
+
+      if (draggedElement && statusContainer) {
         const todoId = draggedElement.dataset.todoId;
-        const newStatus = section.dataset.status;
+        const newStatus = statusContainer.dataset.status;
         const currentTodo = state.todos.find(t => t.id === todoId);
 
         console.log(`🎯 Dropping todo ${todoId}: ${currentTodo?.status} → ${newStatus}`);
@@ -807,11 +980,102 @@
       if (e.target.id === 'modal') closeModal();
     });
 
+    // Filter button dropdown
+    const filterBtn = document.getElementById('filter-btn');
+    const filterDropdown = document.getElementById('filter-dropdown');
+    const filterBadge = document.getElementById('filter-badge');
+    const tagListContainer = document.getElementById('tag-list');
+    const clearFiltersBtn = document.getElementById('clear-filters');
+
+    function renderTagList() {
+      const allTags = getAllTags(state.todos);
+      tagListContainer.innerHTML = '';
+
+      if (allTags.length === 0) {
+        tagListContainer.innerHTML = '<p class="text-sm text-gray-500 py-2">No tags available</p>';
+        return;
+      }
+
+      allTags.forEach(tag => {
+        const isSelected = state.selectedTags.includes(tag);
+        const tagItem = document.createElement('label');
+        tagItem.className = 'flex items-center gap-2 px-2 py-1.5 hover:bg-gray-700 rounded cursor-pointer';
+        tagItem.innerHTML = `
+          <input type="checkbox" ${isSelected ? 'checked' : ''} class="tag-checkbox" data-tag="${escapeHtml(tag)}">
+          <span class="text-sm text-gray-300">${escapeHtml(tag)}</span>
+        `;
+        tagListContainer.appendChild(tagItem);
+      });
+
+      // Add event listeners to checkboxes
+      document.querySelectorAll('.tag-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+          const tag = e.target.dataset.tag;
+          const newSelectedTags = e.target.checked
+            ? [...state.selectedTags, tag]
+            : state.selectedTags.filter(t => t !== tag);
+          setState({ selectedTags: newSelectedTags });
+          updateFilterBadge();
+        });
+      });
+    }
+
+    function updateFilterBadge() {
+      if (state.selectedTags.length > 0) {
+        filterBadge.textContent = state.selectedTags.length;
+        filterBadge.classList.remove('hidden');
+      } else {
+        filterBadge.classList.add('hidden');
+      }
+    }
+
+    filterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      renderTagList();
+      filterDropdown.classList.toggle('hidden');
+      displayDropdown.classList.add('hidden');
+    });
+
+    clearFiltersBtn.addEventListener('click', () => {
+      setState({ selectedTags: [] });
+      updateFilterBadge();
+      renderTagList();
+    });
+
+    // Display button dropdown
+    const displayBtn = document.getElementById('display-btn');
+    const displayDropdown = document.getElementById('display-dropdown');
+    const displayLabel = document.getElementById('display-mode-label');
+
+    displayBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      displayDropdown.classList.toggle('hidden');
+      filterDropdown.classList.add('hidden');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', () => {
+      displayDropdown.classList.add('hidden');
+      filterDropdown.classList.add('hidden');
+    });
+
+    // Handle view selection
+    document.querySelectorAll('.view-option').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const viewMode = e.currentTarget.dataset.view;
+        setState({ viewMode });
+        displayLabel.textContent = viewMode === 'board' ? 'Board' : 'List';
+        displayDropdown.classList.add('hidden');
+      });
+    });
+
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-      // ESC to close modal
+      // ESC to close modal and dropdowns
       if (e.key === 'Escape') {
         closeModal();
+        displayDropdown.classList.add('hidden');
+        filterDropdown.classList.add('hidden');
       }
       // Ctrl/Cmd + N to add new todo
       if ((e.ctrlKey || e.metaKey) && e.key === 'n') {

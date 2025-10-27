@@ -1,5 +1,8 @@
 {
   "name": "chyyynh",
+  "metadata": {
+    "description": "Personal marketplace for vibe coding tools and productivity plugins"
+  },
   "owner": {
     "name": "chyyynh",
     "email": ""

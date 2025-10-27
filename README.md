@@ -1,5 +1,7 @@
 # VTodo - Visualized Todo Manager for Vibe Coding
 
+[![npm version](https://badge.fury.io/js/vtodo.svg)](https://badge.fury.io/js/vtodo)
+
 <img width="1707" height="855" alt="image" src="https://github.com/user-attachments/assets/df696f41-c2af-4e39-bb00-ecbe7fbeb3a2" />
 
 A visual kanban board and CLI tool for managing project todo. Perfect for vibe coding workflows! V for Vibecoding and Visualized.
@@ -20,7 +22,9 @@ VTodo is designed to work seamlessly with AI coding assistants like Claude Code,
 
 ### Installation
 
-#### Option 1: Claude Code Plugin (Recommended for Claude Code users)
+[![https://nodei.co/npm/vtodo.png?downloads=true&downloadRank=true&stars=true](https://nodei.co/npm/vtodo.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.com/package/vtodo)
+
+**Note**: The plugin executes `npx vtodo` commands, so the npm package must be installed in your project first.
 
 ```bash
 # Step 1: Install npm package in your project
@@ -42,65 +46,13 @@ npm install vtodo
 - `/vtodo-status` - Update todo status
 - `/vtodo-web` - Open visual kanban board
 
-**Note**: The plugin executes `npx vtodo` commands, so the npm package must be installed in your project first.
-
-[See full plugin documentation →](PLUGIN.md)
-
-#### Option 2: Direct npm Installation
-
-```bash
-# Run from anywhere
-cd ~/my-project
-pnpm add vtodo
-npx vtodo init
-```
-
-### Setup for AI Editors (Manual Configuration)
-
-If you're not using the Claude Code plugin, you can manually add this to your `claude.md` or `agent.md`:
-
-```markdown
-# Project Todo Management
-
-This project uses VTodo for todo management.
-
-## VTodo Commands
-- Use `vtodo add "title" --detail` to create todos with detail files
-- All todos are stored in `.vtodo/todos.json`
-- Detail files go in `todo/XXX-todo.md`
-- Update todo status with `vtodo status <id> <status>`
-- Mark complete with `vtodo done <id>`
-
-## Workflow for AI Assistant
-### Creating Todos
-When starting a new feature or task, run the command:
-
-vtodo add "Feature title" --detail --tags <tags> --expected <time>
-
-Then write the detailed file in the /todo folder you just created
-
-Always run `vtodo list` to check current priorities and status
-```
-
 ### Using
 
+start a local server to manage todo, this command will open your browser automatically
+
 ```bash
-# Add a todo
-Use your agent editor to follow instruction to add todo or 
-`npx vtodo add "Implement user login" --tags backend --expected 2h`
-
-# List todo
-npx vtodo list
-
-# Open web UI
-npx vtodo web
+vtodo web
 ```
-
-The web UI will:
-1. Start a local server at http://localhost:3456
-2. Open your browser automatically
-3. Load your todos from .vtodo/todos.json
-4. Provide a visual kanban board interface
 
 ## File Structure
 
@@ -140,33 +92,6 @@ my-project/
     }
   ]
 }
-```
-
-### Todo Detail File (Optional: todo/001-todo.md)
-
-You can create detailed markdown files for complex todos using `vtodo edit 1`:
-
-```markdown
-# Implement user registration
-
-## 詳細說明
-Build complete user registration flow with email verification.
-
-## Checklist
-- [ ] Design registration form UI
-- [ ] Implement frontend validation
-- [ ] Connect to backend API
-- [ ] Add email verification
-- [ ] Write tests
-
-## 技術筆記
-- Use React Hook Form for form management
-- Email verification via SendGrid
-- Password requirements: 8+ chars, mixed case + numbers
-
-## 相關連結
-- [Design Mockup](https://figma.com/xxx)
-- [API Specification](./docs/auth-api.md)
 ```
 
 ## CLI Commands
@@ -212,9 +137,6 @@ vtodo remove <id>
 
 # Open web UI
 vtodo web [--port 3456]
-
-# Migrate from old todo.md format (if needed)
-vtodo migrate
 ```
 
 ## Usage Guide
@@ -244,30 +166,9 @@ vtodo show 1
 vtodo edit 1
 ```
 
-## Project Structure
-
-```
-vtodo/
-├── bin/
-│   └── cli.js              # CLI entry point
-├── lib/
-│   ├── commands.js         # CLI command implementations
-│   ├── file-utils.js       # File operations & todo management
-│   ├── server.js           # Express server for web UI
-│   └── schema.js           # Data structure definitions
-├── dist/
-│   └── index.html          # Single-file web UI (Vanilla JS + Tailwind CDN)
-├── package.json
-└── README.md
-```
-
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
+Contributions are welcome! Please feel free to submit a Pull Request. Checkout [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Links
 

@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "vtodo",
-      "source": "./plugin.json",
+      "source": "./vtodo",
       "description": "Visualized Todo Manager for Vibe Coding",
       "version": "0.0.2",
       "author": {

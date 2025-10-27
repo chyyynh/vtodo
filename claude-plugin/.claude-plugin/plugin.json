@@ -2,7 +2,9 @@
   "name": "vtodo",
   "description": "Visualized Todo Manager for Vibe Coding",
   "version": "0.0.2",
-  "author": "chyyynh",
+  "author": {
+    "name": "chyyynh"
+  },
   "keywords": [
     "todo",
     "task-manager",

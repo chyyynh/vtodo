@@ -31,8 +31,10 @@ program
 program
   .command("add <title...>")
   .description("Add a new todo")
+  .option("-d, --description <desc>", "Detailed description")
   .option("-e, --expected <time>", "Expected time (e.g., 2h, 1d)")
   .option("-t, --tags <tags>", "Comma-separated tags")
+  .option("--detail", "Create detail file in /todo folder")
   .action((title, options) => addCmd(process.cwd(), title.join(" "), options));
 
 // List todos

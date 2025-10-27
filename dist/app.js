@@ -69,6 +69,10 @@
         await fetch(`/api/todos/${id}`, { method: 'DELETE' });
       },
 
+      async archiveTodo(id) {
+        await fetch(`/api/todos/${id}/archive`, { method: 'POST' });
+      },
+
       async updateDetail(id, content) {
         await fetch(`/api/todos/${id}/detail`, {
           method: 'PUT',
@@ -269,6 +273,19 @@
       titleContainer.appendChild(titleText);
       item.appendChild(titleContainer);
 
+      // Tags
+      if (todo.tags && todo.tags.length > 0) {
+        const tagsContainer = document.createElement('div');
+        tagsContainer.className = 'flex gap-1 flex-shrink-0';
+        todo.tags.forEach(tag => {
+          const tagEl = document.createElement('span');
+          tagEl.className = 'text-xs px-2 py-0.5 bg-gray-700 text-gray-300 rounded';
+          tagEl.textContent = tag;
+          tagsContainer.appendChild(tagEl);
+        });
+        item.appendChild(tagsContainer);
+      }
+
       // User icon (placeholder)
       const userIcon = document.createElement('div');
       userIcon.className = 'w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs text-gray-400';
@@ -325,18 +342,12 @@
       if (todo.tags && todo.tags.length > 0) {
         const tagsContainer = document.createElement('div');
         tagsContainer.className = 'flex flex-wrap gap-1 mb-2';
-        todo.tags.slice(0, 2).forEach(tag => {
+        todo.tags.forEach(tag => {
           const tagEl = document.createElement('span');
           tagEl.className = 'text-xs px-2 py-0.5 bg-gray-700 text-gray-300 rounded';
           tagEl.textContent = tag;
           tagsContainer.appendChild(tagEl);
         });
-        if (todo.tags.length > 2) {
-          const moreTag = document.createElement('span');
-          moreTag.className = 'text-xs px-2 py-0.5 bg-gray-700 text-gray-400 rounded';
-          moreTag.textContent = `+${todo.tags.length - 2}`;
-          tagsContainer.appendChild(moreTag);
-        }
         item.appendChild(tagsContainer);
       }
 
@@ -581,109 +592,6 @@
     // ============================================
     // Modal Management
     // ============================================
-    function renderDetailFileModal(todo) {
-      const modal = document.getElementById('modal');
-      const modalContent = modal.querySelector('div');
-
-      // Render markdown to HTML
-      const renderedMarkdown = marked.parse(todo.detailContent || '');
-
-      modalContent.innerHTML = `
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h2 class="text-2xl font-bold text-gray-200">${escapeHtml(todo.title)}</h2>
-            <p class="text-sm text-gray-500 mt-1">ID: ${todo.id} • Detail File</p>
-          </div>
-          <button id="edit-mode-btn" class="px-3 py-1.5 text-sm bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition">
-            Edit Mode
-          </button>
-        </div>
-
-        <div id="detail-view" class="mb-4">
-          <div class="markdown-content bg-[#1a1a1a] border border-gray-700 rounded-lg p-6 max-h-[60vh] overflow-y-auto">
-            ${renderedMarkdown}
-          </div>
-        </div>
-
-        <div id="detail-edit" class="hidden mb-4">
-          <textarea
-            id="detail-content"
-            rows="20"
-            class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent font-mono text-sm"
-            placeholder="Enter markdown content..."
-          >${escapeHtml(todo.detailContent)}</textarea>
-        </div>
-
-        <div class="flex justify-between items-center">
-          <div class="text-xs text-gray-500">
-            Path: <code class="bg-[#1a1a1a] px-2 py-1 rounded">todo/${todo.id}-todo.md</code>
-          </div>
-          <div class="flex gap-2">
-            <button
-              type="button"
-              id="cancel-btn"
-              class="px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition"
-            >
-              Close
-            </button>
-            <button
-              type="button"
-              id="save-detail-btn"
-              class="hidden px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition"
-            >
-              Save Changes
-            </button>
-          </div>
-        </div>
-      `;
-
-      // Toggle edit mode
-      document.getElementById('edit-mode-btn').addEventListener('click', () => {
-        const viewDiv = document.getElementById('detail-view');
-        const editDiv = document.getElementById('detail-edit');
-        const saveBtn = document.getElementById('save-detail-btn');
-        const editBtn = document.getElementById('edit-mode-btn');
-        const markdownContainer = viewDiv.querySelector('.markdown-content');
-
-        const isEditing = !editDiv.classList.contains('hidden');
-
-        if (isEditing) {
-          // Switch to view mode - re-render markdown from textarea
-          const currentContent = document.getElementById('detail-content').value;
-          const renderedHtml = marked.parse(currentContent);
-          markdownContainer.innerHTML = renderedHtml;
-
-          viewDiv.classList.remove('hidden');
-          editDiv.classList.add('hidden');
-          saveBtn.classList.add('hidden');
-          editBtn.textContent = 'Edit Mode';
-        } else {
-          // Switch to edit mode
-          viewDiv.classList.add('hidden');
-          editDiv.classList.remove('hidden');
-          saveBtn.classList.remove('hidden');
-          editBtn.textContent = 'View Mode';
-        }
-      });
-
-      // Save changes
-      document.getElementById('save-detail-btn').addEventListener('click', async () => {
-        const content = document.getElementById('detail-content').value;
-        try {
-          await API.updateDetail(todo.id, content);
-          closeModal();
-          await loadTodos();
-          console.log('✅ Detail file updated successfully');
-        } catch (error) {
-          console.error('❌ Error updating detail file:', error);
-          setState({ error: 'Failed to update detail file' });
-        }
-      });
-
-      // Close modal
-      document.getElementById('cancel-btn').addEventListener('click', closeModal);
-    }
-
     async function openEditModal(todoId = null) {
       const modal = document.getElementById('modal');
       const modalContent = modal.querySelector('div');
@@ -700,77 +608,138 @@
       }
 
       const isNew = !todo;
-
-      // If todo has detailFile, show markdown editor
-      if (!isNew && todo.hasDetailFile && todo.detailContent) {
-        renderDetailFileModal(todo);
-        modal.classList.remove('hidden');
-        return;
-      }
-
       const title = isNew ? 'Create New Todo' : 'Edit Todo';
+      const hasDetailFile = !isNew && todo.hasDetailFile && todo.detailContent;
+
+      // Render markdown to HTML if detail file exists
+      const renderedMarkdown = hasDetailFile ? marked.parse(todo.detailContent || '') : '';
 
       modalContent.innerHTML = `
-        <h2 class="text-2xl font-bold mb-4 text-gray-200">${title}</h2>
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold text-gray-200">${title} ${!isNew ? `<span class="text-sm text-gray-500 font-mono">#${todo.id}</span>` : ''}</h2>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              id="cancel-btn"
+              class="px-3 py-1.5 text-sm bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition"
+            >
+              Cancel
+            </button>
+            ${!isNew ? `
+            <button
+              type="button"
+              id="delete-btn"
+              class="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-500 transition"
+            >
+              Delete
+            </button>
+            ` : ''}
+            <button
+              type="submit"
+              form="todo-form"
+              class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-500 transition"
+            >
+              ${isNew ? 'Create' : 'Save'}
+            </button>
+          </div>
+        </div>
         <form id="todo-form">
-          <div class="mb-4">
-            <label class="block text-sm font-medium mb-2 text-gray-300">Title *</label>
-            <input
-              type="text"
-              name="title"
-              value="${escapeHtml(todo?.title || '')}"
-              required
-              class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent"
-              placeholder="Enter todo title"
-            >
+          <!-- JSON Fields Section (Compact) -->
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="col-span-3">
+              <label class="block text-xs font-medium mb-1 text-gray-400">Title *</label>
+              <input
+                type="text"
+                name="title"
+                value="${escapeHtml(todo?.title || '')}"
+                required
+                class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded focus:ring-1 focus:ring-gray-600 text-sm"
+                placeholder="Enter todo title"
+              >
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-400">Tags</label>
+              <input
+                type="text"
+                name="tags"
+                value="${(todo?.tags || []).join(', ')}"
+                class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded focus:ring-1 focus:ring-gray-600 text-sm"
+                placeholder="e.g., frontend, bug"
+              >
+            </div>
+
+            ${!isNew ? `
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-400">Status</label>
+              <select
+                name="status"
+                class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded focus:ring-1 focus:ring-gray-600 text-sm"
+              >
+                <option value="in-progress" ${todo.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+                <option value="pending" ${todo.status === 'pending' ? 'selected' : ''}>Todo</option>
+                <option value="backlog" ${todo.status === 'backlog' ? 'selected' : ''}>Backlog</option>
+                <option value="completed" ${todo.status === 'completed' ? 'selected' : ''}>Done</option>
+              </select>
+            </div>
+            ` : '<div></div>'}
+
+            <div>
+              <label class="block text-xs font-medium mb-1 text-gray-400">Expected Outcome</label>
+              <input
+                type="text"
+                name="expected"
+                class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded focus:ring-1 focus:ring-gray-600 text-sm"
+                placeholder="What should be achieved?"
+                value="${escapeHtml(todo?.expected || '')}"
+              >
+            </div>
+
+            <div class="col-span-3">
+              <label class="block text-xs font-medium mb-1 text-gray-400">Description</label>
+              <textarea
+                name="description"
+                rows="2"
+                class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded focus:ring-1 focus:ring-gray-600 text-sm"
+                placeholder="Brief description"
+              >${escapeHtml(todo?.description || '')}</textarea>
+            </div>
           </div>
 
-          <div class="mb-4">
-            <label class="block text-sm font-medium mb-2 text-gray-300">Description</label>
-            <textarea
-              name="description"
-              rows="3"
-              class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent"
-              placeholder="Enter description"
-            >${escapeHtml(todo?.description || '')}</textarea>
-          </div>
+          ${hasDetailFile ? `
+          <!-- Markdown Detail File Section -->
+          <div class="mb-4 border border-gray-700 rounded-lg p-3 bg-[#0d0d0d]">
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-xs font-medium text-gray-400">
+                📄 Detail File <span class="text-gray-600 ml-1 font-mono">todo/${todo.id}-todo.md</span>
+              </label>
+              <button
+                type="button"
+                id="toggle-md-view-btn"
+                class="px-2 py-1 text-xs bg-gray-700 text-gray-200 rounded hover:bg-gray-600 transition"
+              >
+                Edit
+              </button>
+            </div>
 
-          <div class="mb-4">
-            <label class="block text-sm font-medium mb-2 text-gray-300">Expected Outcome</label>
-            <textarea
-              name="expected"
-              rows="2"
-              class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent"
-              placeholder="What should be achieved?"
-            >${escapeHtml(todo?.expected || '')}</textarea>
-          </div>
+            <!-- Markdown View Mode -->
+            <div id="md-view-mode" class="markdown-content bg-[#1a1a1a] border border-gray-700 rounded p-3 max-h-[50vh] overflow-y-auto text-sm">
+              ${renderedMarkdown}
+            </div>
 
-          <div class="mb-4">
-            <label class="block text-sm font-medium mb-2 text-gray-300">Tags (comma separated)</label>
-            <input
-              type="text"
-              name="tags"
-              value="${(todo?.tags || []).join(', ')}"
-              class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent"
-              placeholder="e.g., frontend, bug, urgent"
-            >
-          </div>
-
-          ${!isNew ? `
-          <div class="mb-4">
-            <label class="block text-sm font-medium mb-2 text-gray-300">Status</label>
-            <select
-              name="status"
-              class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded-lg focus:ring-2 focus:ring-gray-600 focus:border-transparent"
-            >
-              <option value="in-progress" ${todo.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
-              <option value="pending" ${todo.status === 'pending' ? 'selected' : ''}>Todo</option>
-              <option value="backlog" ${todo.status === 'backlog' ? 'selected' : ''}>Backlog</option>
-              <option value="completed" ${todo.status === 'completed' ? 'selected' : ''}>Done</option>
-            </select>
+            <!-- Markdown Edit Mode -->
+            <div id="md-edit-mode" class="hidden">
+              <textarea
+                id="md-content"
+                rows="20"
+                class="w-full px-3 py-2 bg-[#1a1a1a] border border-gray-700 text-gray-200 rounded focus:ring-1 focus:ring-gray-600 font-mono text-xs"
+                placeholder="Enter markdown content..."
+              >${escapeHtml(todo.detailContent)}</textarea>
+            </div>
           </div>
           ` : ''}
 
+          <!-- Checklist Section -->
           <div class="mb-6">
             <label class="block text-sm font-medium mb-2 text-gray-300">Checklist</label>
             <div id="checklist-container" class="space-y-2 mb-2">
@@ -784,31 +753,6 @@
               + Add checklist item
             </button>
           </div>
-
-          <div class="flex justify-end gap-2">
-            <button
-              type="button"
-              id="cancel-btn"
-              class="px-4 py-2 bg-gray-700 text-gray-200 rounded-lg hover:bg-gray-600 transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition"
-            >
-              ${isNew ? 'Create' : 'Save'}
-            </button>
-            ${!isNew ? `
-            <button
-              type="button"
-              id="delete-btn"
-              class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition"
-            >
-              Delete
-            </button>
-            ` : ''}
-          </div>
         </form>
       `;
 
@@ -821,11 +765,39 @@
         document.getElementById('delete-btn').addEventListener('click', () => deleteTodoHandler(todoId));
       }
 
+      // Markdown view/edit toggle
+      if (hasDetailFile) {
+        document.getElementById('toggle-md-view-btn').addEventListener('click', () => {
+          const viewDiv = document.getElementById('md-view-mode');
+          const editDiv = document.getElementById('md-edit-mode');
+          const toggleBtn = document.getElementById('toggle-md-view-btn');
+          const markdownContainer = viewDiv;
+
+          const isEditing = !editDiv.classList.contains('hidden');
+
+          if (isEditing) {
+            // Switch to view mode - re-render markdown from textarea
+            const currentContent = document.getElementById('md-content').value;
+            const renderedHtml = marked.parse(currentContent);
+            markdownContainer.innerHTML = renderedHtml;
+
+            viewDiv.classList.remove('hidden');
+            editDiv.classList.add('hidden');
+            toggleBtn.textContent = 'Edit';
+          } else {
+            // Switch to edit mode
+            viewDiv.classList.add('hidden');
+            editDiv.classList.remove('hidden');
+            toggleBtn.textContent = 'View';
+          }
+        });
+      }
+
       document.getElementById('add-checklist-item').addEventListener('click', addChecklistItem);
 
       document.getElementById('todo-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        await saveTodo(todoId);
+        await saveTodo(todoId, hasDetailFile);
       });
 
       // Setup checklist item listeners
@@ -904,7 +876,7 @@
       return items;
     }
 
-    async function saveTodo(todoId) {
+    async function saveTodo(todoId, hasDetailFile) {
       const form = document.getElementById('todo-form');
       const formData = new FormData(form);
 
@@ -927,6 +899,14 @@
       try {
         if (todoId) {
           await API.updateTodo(todoId, todoData);
+
+          // Save markdown content if detail file exists
+          if (hasDetailFile) {
+            const mdContent = document.getElementById('md-content')?.value;
+            if (mdContent !== undefined) {
+              await API.updateDetail(todoId, mdContent);
+            }
+          }
         } else {
           await API.createTodo(todoData);
         }
@@ -939,7 +919,7 @@
     }
 
     async function deleteTodoHandler(id) {
-      if (confirm('Are you sure you want to delete this todo?')) {
+      if (confirm('Are you sure you want to delete this todo?\n\nThis will remove it from JSON and delete all related files.')) {
         try {
           await API.deleteTodo(id);
           await loadTodos();

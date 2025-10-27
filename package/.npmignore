@@ -18,13 +18,16 @@ node_modules/
 .prettierrc*
 .editorconfig
 
-# IDE settings (keep .claude-plugin for plugin support)
+# IDE settings
 .vscode/
 .idea/
 .claude/
 *.swp
 *.swo
 *~
+
+# Claude Code plugin (distributed separately)
+claude-plugin/
 
 # OS files
 .DS_Store

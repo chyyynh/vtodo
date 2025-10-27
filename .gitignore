@@ -10,6 +10,10 @@ lerna-debug.log*
 # Dependencies
 node_modules
 
+# Workspace files (root is just for development)
+package.json
+pnpm-lock.yaml
+
 # Build output
 # Note: dist/ is now tracked since we use a single HTML file (no build step)
 dist-ssr

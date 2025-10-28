@@ -1,6 +1,8 @@
 # VTodo - Visualized Todo Manager for Vibe Coding
 
-[![npm version](https://badge.fury.io/js/vtodo.svg)](https://badge.fury.io/js/vtodo)
+[![npm version](https://badge.fury.io/js/vtodo.svg)](https://badge.fury.io/js/vtodo) ![NPM Downloads](https://img.shields.io/npm/d18m/vtodo)
+
+
 
 <img width="1707" height="855" alt="image" src="https://github.com/user-attachments/assets/df696f41-c2af-4e39-bb00-ecbe7fbeb3a2" />
 
@@ -27,16 +29,14 @@ VTodo is designed to work seamlessly with AI coding assistants like Claude Code,
 **Note**: The plugin executes `npx vtodo` commands, so the npm package must be installed in your project first.
 
 ```bash
-# Step 1: Install npm package in your project
-npm install vtodo
-# or: pnpm add vtodo
-
-# Step 2: Add marketplace and install plugin
+# Step 1: Add marketplace and install plugin
 /plugin marketplace add chyyynh/vtodo
 /plugin install vtodo
 
-# Step 3: Initialize in your project
-/vtodo-init
+# Step 2: Initialize by claude code, install npm package
+/vtodo init
+# or install by yourself
+npm install vtodo
 ```
 
 **Available Plugin Commands:**

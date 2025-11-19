@@ -3,97 +3,123 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VTodo - Issue Tracker</title>
+  <title>VTodo</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            gray: {
+              750: '#2d2d2d',
+              850: '#1f1f1f',
+              950: '#0f0f0f',
+            }
+          },
+          animation: {
+            'scale-in': 'scaleIn 0.15s ease-out forwards',
+          }
+        }
+      }
+    }
+  </script>
 </head>
-<body class="min-h-screen">
+<body class="bg-[#0f0f0f] text-[#eeeeee] font-sans h-screen overflow-hidden selection:bg-[#5E6AD2] selection:text-white">
   <!-- App Container -->
-  <div id="app" class="flex flex-col h-screen">
-    <!-- Header -->
-    <header class="border-b border-gray-800 bg-[#1a1a1a]">
-      <div class="px-6 py-3 flex items-center justify-center">
-        <div class="flex items-center gap-4">
-          <h1 class="text-xl font-semibold text-gray-200">VTodo</h1>
-        </div>
-      </div>
-    </header>
+  <div id="app" class="flex flex-col h-full">
+    
+    <!-- Minimal Top Nav -->
+    <nav class="h-14 flex items-center justify-between px-8 border-b border-[#1a1a1a] bg-[#0f0f0f]/80 backdrop-blur-md fixed top-0 w-full z-20">
+       <div class="flex items-center gap-3">
+         <div class="w-6 h-6 rounded bg-[#1f1f1f] border border-[#333] flex items-center justify-center text-[10px] font-bold text-gray-300">V</div>
+         <span class="text-sm font-medium text-gray-400">vtodo</span>
+       </div>
+       <div class="flex items-center gap-4">
+         <a href="#" class="text-xs text-gray-500 hover:text-gray-300 transition-colors">Feedback</a>
+         <a href="#" class="text-xs text-gray-500 hover:text-gray-300 transition-colors">Help</a>
+         <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500"></div>
+       </div>
+    </nav>
 
-    <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto">
-      <div class="max-w-[1400px] mx-auto">
-        <!-- Toolbar -->
-        <div class="sticky top-0 bg-[#1a1a1a] border-b border-gray-800 px-4 py-1 flex items-center justify-between z-20">
-          <div class="relative">
-            <button id="filter-btn" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-              </svg>
-              Filter
-              <span id="filter-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs bg-blue-600 text-white rounded-full"></span>
-            </button>
-            <div id="filter-dropdown" class="hidden absolute left-0 mt-1 w-64 bg-[#252525] border border-gray-700 rounded-lg shadow-lg overflow-hidden z-30">
-              <div class="p-3 border-b border-gray-700">
-                <div class="flex items-center justify-between mb-2">
-                  <h3 class="text-sm font-semibold text-gray-300">Filter by Tags</h3>
-                  <button id="clear-filters" class="text-xs text-blue-400 hover:text-blue-300">Clear all</button>
-                </div>
-                <div id="tag-list" class="max-h-60 overflow-y-auto space-y-1">
-                  <!-- Tags will be rendered here -->
-                </div>
-              </div>
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto pt-24 pb-12">
+       <div class="max-w-5xl mx-auto px-8">
+          
+          <!-- Page Header -->
+          <div class="flex items-end justify-between mb-10">
+             <div>
+                <h1 class="text-3xl font-bold text-[#eeeeee] mb-2 tracking-tight">My Todos</h1>
+                <p class="text-gray-500 text-sm">Manage your personal tasks and roadmap.</p>
+             </div>
+             <button id="new-issue-btn" class="bg-[#eeeeee] hover:bg-white text-black text-sm font-medium px-4 py-2 rounded shadow-lg shadow-white/5 transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                New Todo
+             </button>
+          </div>
+
+          <!-- Controls Bar -->
+          <div class="sticky top-0 z-10 mb-8">
+            <div class="flex items-center justify-between pb-4 border-b border-[#1a1a1a] bg-[#0f0f0f]/95 backdrop-blur-sm pt-2">
+               <!-- View Switcher (Segmented Control) -->
+               <div class="flex bg-[#1a1a1a] p-1 rounded-lg border border-[#2a2a2a]">
+                  <button data-view="list" class="view-option active-view px-3 py-1 text-xs font-medium rounded-[4px] transition-all text-gray-400 hover:text-gray-200">List</button>
+                  <button data-view="board" class="view-option px-3 py-1 text-xs font-medium rounded-[4px] transition-all text-gray-400 hover:text-gray-200">Board</button>
+               </div>
+
+               <!-- Filter & Display -->
+               <div class="flex items-center gap-3">
+                  <!-- Filter -->
+                  <div class="relative">
+                    <button id="filter-btn" class="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-gray-200 hover:bg-[#1a1a1a] rounded border border-transparent hover:border-[#2a2a2a] transition-all">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                      Filter
+                      <span id="filter-badge" class="hidden ml-1 px-1.5 py-0.5 text-[9px] bg-[#5E6AD2] text-white rounded-full"></span>
+                    </button>
+                    <!-- Filter Dropdown -->
+                    <div id="filter-dropdown" class="hidden absolute right-0 top-full mt-2 w-56 bg-[#1f1f1f] border border-[#333] rounded-lg shadow-xl overflow-hidden z-30">
+                      <div class="p-2">
+                        <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-2 px-2">Filter by Tags</div>
+                        <div id="tag-list" class="space-y-0.5 max-h-48 overflow-y-auto"></div>
+                        <div class="border-t border-[#333] mt-2 pt-2 px-2">
+                          <button id="clear-filters" class="text-xs text-[#5E6AD2] hover:text-[#7e8af2] w-full text-left">Clear filters</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+               </div>
             </div>
           </div>
-          <div class="relative">
-            <button id="display-btn" class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-400 hover:text-gray-300 hover:bg-gray-800 rounded">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-              </svg>
-              <span id="display-mode-label">List</span>
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
-            </button>
-            <div id="display-dropdown" class="hidden absolute right-0 mt-1 w-32 bg-[#252525] border border-gray-700 rounded-lg shadow-lg overflow-hidden z-30">
-              <button data-view="list" class="view-option w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                </svg>
-                List
-              </button>
-              <button data-view="board" class="view-option w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path>
-                </svg>
-                Board
-              </button>
-            </div>
+
+          <!-- Loading State -->
+          <div id="loading" class="hidden py-12 flex justify-center">
+            <div class="spinner"></div>
           </div>
-        </div>
 
-        <!-- Loading State -->
-        <div id="loading" class="hidden flex justify-center items-center py-20">
-          <div class="spinner"></div>
-        </div>
+          <!-- Error State -->
+          <div id="error" class="hidden mb-6 bg-red-900/20 border border-red-900/50 text-red-400 px-4 py-3 rounded text-sm">
+            <p class="font-semibold">Error</p>
+            <p id="error-message"></p>
+          </div>
 
-        <!-- Error State -->
-        <div id="error" class="hidden bg-red-900/20 border border-red-800 text-red-400 px-4 py-3 mx-6 mt-4 rounded">
-          <p class="font-bold">Error</p>
-          <p id="error-message"></p>
-        </div>
-
-        <!-- Issues List -->
-        <div id="issues-list" class="px-6 py-4">
-          <!-- Issues will be rendered here -->
-        </div>
-      </div>
+          <!-- Issues List -->
+          <div id="issues-list" class="min-h-[400px]">
+            <!-- Issues will be rendered here -->
+          </div>
+       </div>
     </main>
   </div>
 
   <!-- Edit/Create Modal -->
-  <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-70 modal-backdrop flex items-center justify-center z-50 p-4">
-    <div class="bg-[#252525] border border-gray-700 rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto fade-in">
+  <div id="modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-[#1f1f1f] border border-[#333] rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-in ring-1 ring-white/10">
       <!-- Modal content will be rendered here -->
     </div>
   </div>
